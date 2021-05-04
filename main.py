@@ -21,16 +21,17 @@ import matplotlib.pyplot as plt
 # import matplotlib as mpl
 import netCDF4 as nC
 from get_data import getdata_gui
-# from climate_stats import *ge
+from climate_stats import getstats
 # from climate_plots import *
 from var_select import Combo
 import itertools as it
+import numpy as np
 
-ncsets = []
-lat = []
-lon = []
-time = []
-var = []
+nc_ds = []
+ds_vars = {}
+#            {'time': [], 'lat': [], 'lon': [],
+#            'max_lat': [], 'min_lat': [], 'max_lon': [], 'min_lon': [],
+#            'time_unit': [], 'lat_unit': [], 'lon_unit': []}
 nc_vars = []
 disp_vars = ["---none loaded---"]
 some_vars = {'tas': 'Surface Air Temperature',
@@ -46,32 +47,36 @@ tk_active_var = tk.StringVar()
 
 def make_gui():
     def b1_open_file():
-        global ncsets
+        global nc_ds
         fpath = filedialog.askopenfilename(filetypes=[("netcdf", "*.nc"), ("All Files", "*.*")])
-        ncsets.append(nC.Dataset(fpath, mode='r'))
-        get_dsdata(ncsets[0])
+        nc_ds.append(nC.Dataset(fpath, mode='r'))
+        get_dsdata(nc_ds[0])
         c1.create(disp_vars)
+        b4.config(state="normal")
+        b5.config(state="normal")
+        b6.config(state="normal")
 
     def b2_call_getdatagui():
         getdata_gui()
 
     def b4_getstats():
-        pass
-        # stats = getstats(ncsets[0], var)
+        dis_v = str(c1.varselect.get())  # get the displayed variable
+        act_v = nc_vars[disp_vars.index(dis_v)]  # find the corresponding nc variable
+        getstats(nc_ds[0], act_v, dis_v)  # pass to the function
 
     def b5_call_plottime():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
-        # b7.config(state="normal")
         # plot_time(x, y)
         # canvas.draw()
+        b7.config(state="normal")
 
     def b6_call_plotmap():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
-        # b7.config(state="normal")
         # b7.invoke()
         # b7.flash()
         # cp.plot_map()
         # canvas.draw()
+        # b7.config(state="normal")
 
     def b7_clear():
         axes.cla()  # clear axes
@@ -105,7 +110,7 @@ def make_gui():
     b1 = tk.Button(buttonframe, text="Load file", command=b1_open_file)
     b1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=30)
     irow += 1
-    b2 = tk.Button(buttonframe, text="Get data", command=b2_call_getdatagui)
+    b2 = tk.Button(buttonframe, text="Download data", command=b2_call_getdatagui)
     b2.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     l1 = tk.Label(buttonframe, text="Selected variable")  # , command=c1_varselect)
@@ -138,11 +143,12 @@ def make_gui():
 
 
 def get_dsdata(ds):
+    """
+    Dimensions of single layer climate variables are time:lat:lon
+    """
     global disp_vars
     global nc_vars
-    global time
-    global lat
-    global lon
+    global ds_vars
 
     nc_vars = list(ds.variables.keys())
     nc_dims = list(ds.dimensions.keys())
@@ -163,27 +169,29 @@ def get_dsdata(ds):
         else:
             disp_vars.append(v)
 
+    # Get the values of the dimension variables (as type 'numpy.ma.core.MaskedArray')
+    lat = ds.variables['lat'][:]
+    lon = ds.variables['lon'][:]
+    time = ds.variables['time'][:]
+    ds_vars['lat'] = np.ma.asarray(lat)  # Is this step necessary?
+    ds_vars['lon'] = np.ma.asarray(lon)
+    ds_vars['time'] = np.ma.asarray(time)
+
     # Get min and max values of dims (lat, lon)
     size_lat = ds.variables['lat'].size
     size_lon = ds.variables['lon'].size
-    min_lat = ds.variables['lat'][0].data
-    max_lat = ds.variables['lat'][size_lat - 1].data
-    min_lon = ds.variables['lon'][0].data
-    max_lon = ds.variables['lon'][size_lon - 1].data
+    ds_vars['min_lat'] = ds.variables['lat'][0].data
+    ds_vars['max_lat'] = ds.variables['lat'][size_lat - 1].data
+    ds_vars['max_lon'] = ds.variables['lon'][0].data
+    ds_vars['min_lon'] = ds.variables['lon'][size_lon - 1].data
 
-    time = ds.variables['time'][:]  # becomes type 'numpy.ma.core.MaskedArray'
+    # Get units of the dims
+    ds_vars['time_unit'] = ds.variables['time'].units
+    ds_vars['lat_unit'] = ds.variables['lat'].units
+    ds_vars['lon_unit'] = ds.variables['lon'].units
 
     print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
     print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
-
-
-def proc_ds(ds, varname):
-    """
-    Dimensions of single layer climate variables are time:lat:lon
-    :return:
-    """
-    var = ds.variables[varname][:, :, :]
-    var2 = var.mean(axis=(1, 2))
 
 
 make_gui()

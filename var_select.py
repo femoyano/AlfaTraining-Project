@@ -13,7 +13,7 @@ class Combo:
     def create(self, varnames):
         self.box.bind('<<ComboboxSelected>>', self.entry_changed)
         self.box['values'] = varnames
-        self.box.current(len(varnames)-1)
+        self.box.current(0)
 
     def grid(self, row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W, ipadx=10):
         self.box.grid(row=row, column=column, sticky=sticky, ipadx=ipadx)
