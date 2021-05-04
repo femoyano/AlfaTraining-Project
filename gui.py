@@ -22,14 +22,13 @@ import netCDF4 as nc
 import get_data as gd
 import climate_plots as cp
 
-
 # Get data vars
 climvars = [
     "near_surface_air_temperature",
     "daily_maximum_near_surface_air_temperature",
     "daily_minimum_near_surface_air_temperature",
     "precipitation"
-    ]
+]
 timestep = ["monthly", "hourly"]
 
 
@@ -41,7 +40,22 @@ def b1_open_file():
 
 def b2_getdata():
 
-    def close_getdata():
+    def get_save_dir():
+        d = filedialog.askdirectory()
+        tk_save_dir.set(d)
+
+    def call_getdata():
+        info = gd.getdata(save_dir=str(tk_save_dir.get()),
+                          var=str(tk_get_var.get()),
+                          time_step=str(tk_get_step.get()),
+                          start_date=str(tk_get_sdate.get()),
+                          end_date=str(tk_get_edate.get()),
+                          north=float(tk_get_N.get()), south=float(tk_get_S.get()),
+                          east=float(tk_get_E.get()), west=float(tk_get_W.get())
+                          )
+        messagebox.showinfo("Data Download", info)
+
+    def close_getdatawin():
         top_getdata.quit()
         top_getdata.destroy()
 
@@ -56,7 +70,7 @@ def b2_getdata():
                        variable=tk_get_var,
                        indicatoron=1,
                        # command=,
-                       value=climvar).grid(sticky=tk.W+tk.E)  # .grid(sticky=tk.W + tk.E)  # returns str
+                       value=climvar).grid(sticky=tk.W + tk.E)  # .grid(sticky=tk.W + tk.E)  # returns str
 
     lab2 = tk.Label(top_getdata, text="Time Step")
     lab2.grid()
@@ -66,7 +80,7 @@ def b2_getdata():
                        variable=tk_get_step,
                        indicatoron=1,
                        # command=,
-                       value=step).grid(sticky=tk.W+tk.E)  # .grid(sticky=tk.W + tk.E)  # returns str
+                       value=step).grid(sticky=tk.W + tk.E)  # .grid(sticky=tk.W + tk.E)  # returns str
 
     lab3 = tk.Label(top_getdata, text="Start date (yyyy-mm-dd): ")
     lab3.grid()
@@ -104,7 +118,7 @@ def b2_getdata():
     dd_button = tk.Button(top_getdata, text="Download Data", command=call_getdata)
     dd_button.grid()
 
-    close_button = tk.Button(top_getdata, text="Close", command=close_getdata)
+    close_button = tk.Button(top_getdata, text="Close", command=close_getdatawin)
     close_button.grid()
 
     top_getdata.mainloop()
@@ -114,6 +128,9 @@ def b3_subset():
     messagebox.showinfo("Info", "Sorry, function still under construction.")
     # top_subset = tk.Toplevel()
     # top_subset.grid()
+
+def b4_getstats():
+    stats = getstats()
 
 
 def b5_plot_time():
@@ -128,23 +145,6 @@ def b5_plot_time():
 def b7_clear():
     axes.cla()  # clear axes
     canvas.draw()
-
-
-def get_save_dir():
-    d = filedialog.askdirectory()
-    tk_save_dir.set(d)
-
-
-def call_getdata():
-    info = gd.getdata(save_dir=str(tk_save_dir.get()),
-                       var=str(tk_get_var.get()),
-                       time_step=str(tk_get_step.get()),
-                       start_date=str(tk_get_sdate.get()),
-                       end_date=str(tk_get_edate.get()),
-                       north=float(tk_get_N.get()), south=float(tk_get_S.get()),
-                       east=float(tk_get_E.get()), west=float(tk_get_W.get())
-                       )
-    messagebox.showinfo("Data Download", info)
 
 
 def close_root():
@@ -171,11 +171,11 @@ tk_save_dir.set("./")
 tk_get_var.set("near_surface_air_temperature")
 tk_get_step.set("monthly")
 tk_get_sdate.set("2020-01-01")
-tk_get_edate.set("2100-12-31")
+tk_get_edate.set("2030-12-31")
 tk_get_N.set(55.0)
-tk_get_E.set(6.0)
+tk_get_E.set(15.0)
 tk_get_S.set(47.0)
-tk_get_W.set(15.0)
+tk_get_W.set(6.0)
 
 # Create a plotting frame
 frame_plot1 = tk.Frame(root)
@@ -206,7 +206,7 @@ b2.grid()  # (row=0, column=2, sticky=tk.N + tk.S + tk.E + tk.W)
 b3 = tk.Button(buttonframe, text="Subset Data", command=b3_subset)
 b3.grid()  # (row=0, column=2, sticky=tk.N + tk.S + tk.E + tk.W)
 
-
+b4 = tk.Button(buttonframe, text="Summary Stats", command=b4_getstats)
 
 b7 = tk.Button(buttonframe, text="Clear", command=b7_clear, activeforeground="red", state="disabled")
 b7.grid()  # (row=0, column=2, sticky=tk.N + tk.S + tk.E + tk.W)
