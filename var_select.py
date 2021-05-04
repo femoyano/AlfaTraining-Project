@@ -13,7 +13,7 @@ class Combo:
     def create(self, varnames):
         self.box.bind('<<ComboboxSelected>>', self.entry_changed)
         self.box['values'] = varnames
-        self.box.current(0)
+        self.box.current(len(varnames)-1)
 
     def grid(self, row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W, ipadx=10):
         self.box.grid(row=row, column=column, sticky=sticky, ipadx=ipadx)
@@ -28,7 +28,7 @@ class Combo:
 if __name__ == '__main__':
     root = tk.Tk()
     myvar = tk.StringVar()
-    c = Combo(root, tk.StringVar())
+    c = Combo(root)
     c.create(["one", "two", "three"])
     c.grid()
     root.mainloop()
