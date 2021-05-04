@@ -1,6 +1,7 @@
 """
-Download and open an nc variable
-API for importing data from cds.climate.cpernicus.eu
+Download climate data using the API from cds.climate.cpernicus.eu
+For this data request to work, one must first create a user account
+and follow the instructions for setting up the API.
 """
 
 import cdsapi
@@ -8,13 +9,13 @@ import zipfile
 import os
 
 
-def get_data(save_dir="./", var='near_surface_air_temperature',
-             time_step='monthly',
-             start_date='2020-01-01',
-             end_date='2100-12-31',
-             north=55.0, south=47.0, east=9.0, west=16.0,
-             model='mpi_esm1_2_lr',
-             info=""):
+def getdata(save_dir="./", var='near_surface_air_temperature',
+            time_step='monthly',
+            start_date='2020-01-01',
+            end_date='2100-12-31',
+            north=55.0, south=47.0, east=9.0, west=16.0,
+            model='mpi_esm1_2_lr'
+            ):
 
     date = start_date+'/'+end_date
     dn = save_dir+var+'_'+time_step+'_'+start_date+'_'+end_date+'_'+model
