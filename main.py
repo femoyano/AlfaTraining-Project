@@ -16,7 +16,7 @@ Check kap_19_tkinter_validate1 for callback functions validating inputs
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox
-
+# from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import netCDF4 as nC
@@ -24,6 +24,7 @@ from get_data import getdata_gui
 from stats import getstats
 import itertools as it
 import numpy as np
+import cartopy as ct
 import cartopy.crs as ccrs
 
 nc_ds = []
@@ -55,6 +56,7 @@ def make_gui():
             c1_entry_changed(1)
             b5.config(state="normal")
             b6.config(state="normal")
+            b4.config(state="normal")
 
     def b2_call_getdatagui():
         getdata_gui()
@@ -66,45 +68,48 @@ def make_gui():
             act_var = nc_vars[disp_vars.index(sel_v)]  # find the corresponding nc variable and set as active globally
             tk_summary.set(getstats(ds_vars, act_var, sel_v))  # pass to the function and set output to var
 
-    def b5_call_plottime():
-        b7.invoke()
+    def b5_plottime():
         b7.config(state="normal")
-        plot_time(ds_vars, act_var, str(tk_sel_var.get()))
-        # canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
-        # # axes1.grid()
-        canvas1.draw()
-        # toolbar.grid(row=0, column=1, sticky=tk.W)
-        # toolbar.update()
-
-    def plot_time(ds, var, dvar):
-        x = ds['time']
-        y = ds[var]
+        x = ds_vars['time']
+        y = ds_vars[act_var]
         y = y.mean(axis=(1, 2))  # averages across lat and lon (i.e. entire region)
-        xlab = ds['time_units']
-        ylab = ds[var + '_units']
-        title = dvar
-        axes1.title = title
-        axes1.set_xlabel(xlab)
-        axes1.set_ylabel(ylab)
-        axes1.plot(x, y, color="blue")
+        xlab = ds_vars['time_units']
+        ylab = ds_vars[act_var + '_units']
+        ax1.title.set_text(str(tk_sel_var.get())+': average temporal change in the region')
+        ax1.set_xlabel(xlab)
+        ax1.set_ylabel(ylab)
+        ax1.plot(x, y, color="blue")
+        # plot_time(ds_vars, act_var, str(tk_sel_var.get()))
+        canvas1.draw()
 
-    def b6_call_plotmap():
-        b7.invoke()
+    def b6_plotmap():
+        lat = ds_vars['lat']
+        lon = ds_vars['lon']
+        val = ds_vars[act_var]
+        val = val.mean(axis=0)
+        unit = ds_vars[act_var + '_units']
+
+        ax2 = fig2.add_subplot(111, projection=ccrs.PlateCarree())
+        ax2.set_global()
+        ax2.add_feature(ct.feature.BORDERS, linestyle=':')
+        ax2.add_feature(ct.feature.OCEAN)
+        ax2.add_feature(ct.feature.COASTLINE)
+        # ax2.coastlines()
+        ax1.title.set_text(str(tk_sel_var.get())+': average spatial values over time period')
+        cf = ax2.contourf(lon, lat, val, 60, transform=ccrs.PlateCarree(), )
+        cb = fig2.colorbar(cf, ax=ax2, orientation="vertical", pad=0.02, aspect=16, shrink=0.8)
+        cb.set_label(unit, size=12, rotation=270, labelpad=15)
+        cb.ax.tick_params(labelsize=10)
+
+        canvas2.draw()
+
         b7.config(state="normal")
-        # plot_map(ds_vars, act_var, str(tk_sel_var.get()))
-        # canvas2.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
-        # axes2.grid()
-        # canvas2.draw()
-        # toolbar.grid(row=0, column=1, sticky=tk.W)
-        # toolbar.update()
-
-    def plot_map(ds, var, dvar):
-        pass
-        # axes2.coastlines()
 
     def b7_clear():
-        axes1.cla()  # clear axes
-        # axes2.cla()
+        ax1.cla()
+        fig2.clf()
+        canvas1.draw()
+        canvas2.draw()
 
     def b8_call_subset():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
@@ -120,68 +125,71 @@ def make_gui():
     mainframe = tk.Frame(main_gui)
     mainframe.grid()  # (row=0, column=0)
     maxrow = 40
+    midrow = 20
 
     # Figures, canvas and axes
-    fig1 = plt.Figure(figsize=(9, 6))
-    axes1 = fig1.add_subplot(111)
+    fig1 = plt.Figure(figsize=(9, 4))
+    ax1 = fig1.add_subplot(111)
+    ax1.grid()
     canvas1 = FigureCanvasTkAgg(fig1, master=mainframe)
-    canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
-    # axes1.grid()
-    # canvas1.draw()
-
-    # fig2 = plt.Figure(figsize=(9, 6))
-    # axes2 = fig2.add_subplot(111, projection=ccrs.PlateCarree())
-    # canvas2 = FigureCanvasTkAgg(fig2, master=mainframe)
-
+    canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=midrow - 1)
     # Create figure toolbar object
-    toolbar = NavigationToolbar2Tk(canvas1, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
-    toolbar.grid(row=0, column=1, sticky=tk.W)
-    toolbar.update()
+    toolbar1 = NavigationToolbar2Tk(canvas1, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
+    toolbar1.grid(row=0, column=1, sticky=tk.W)
+    toolbar1.update()
 
-    # Make a button frame and populate
-    # mainframe = tk.Frame(main_gui)
-    # mainframe.grid(row=0, column=0, sticky=tk.N)  # row=0, column=0, sticky=tk.N + tk.W)
+    # Figures, canvas and axes
+    fig2 = plt.Figure(figsize=(9, 4))
+    canvas2 = FigureCanvasTkAgg(fig2, master=mainframe)
+    canvas2.get_tk_widget().grid(row=midrow + 1, column=1, columnspan=1, rowspan=maxrow)
+    canvas2.draw()
+    # Create figure toolbar object
+    toolbar2 = NavigationToolbar2Tk(canvas2, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
+    toolbar2.grid(row=midrow, column=1, sticky=tk.W)
+    toolbar2.update()
+
+    # Buttons
     irow = 0
     h1 = tk.Label(mainframe, text='MENU OPTIONS')
-    h1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    h1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     b1 = tk.Button(mainframe, text="Load File", command=b1_open_file)
-    b1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     b2 = tk.Button(mainframe, text="Download Data", command=b2_call_getdatagui)
-    b2.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
-    b5 = tk.Button(mainframe, text="Plot Time", command=b5_call_plottime, state="disabled")
-    b5.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b5 = tk.Button(mainframe, text="Plot Time", command=b5_plottime, state="disabled")
+    b5.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
-    b6 = tk.Button(mainframe, text="Plot Map", command=b6_call_plotmap, state="disabled")
-    b6.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b6 = tk.Button(mainframe, text="Plot Map", command=b6_plotmap, state="disabled")
+    b6.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
-    b7 = tk.Button(mainframe, text="Clear Plot", command=b7_clear, activeforeground="red", state="disabled")
-    b7.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b7 = tk.Button(mainframe, text="Clear Plots", command=b7_clear, state="disabled")
+    b7.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     b8 = tk.Button(mainframe, text="Subset Data", command=b8_call_subset, state="disabled")
-    b8.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b8.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 3
     l1 = tk.Label(mainframe, text="Selected Variable")  # , command=c1_varselect)
-    l1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    l1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     c1 = ttk.Combobox(mainframe, textvariable=tk_sel_var, values=disp_vars, justify='center')
     c1.bind('<<ComboboxSelected>>', c1_entry_changed)
     c1.current(0)
-    c1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    c1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 3
     l2 = tk.Label(mainframe, text="Summary Info")
-    l2.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    l2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
-    m1 = tk.Message(mainframe, relief='sunken', textvariable=tk_summary, justify='left', width=150)
-    m1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, padx=5, ipadx=5)
+    m1 = tk.Message(mainframe, relief='sunken', textvariable=tk_summary, justify='left', width=180)
+    m1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, padx=5, ipadx=5)
     irow += 1
     b4 = tk.Button(mainframe, text="Save Summary", command=b4_save_summary, state="disabled")
-    b4.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b4.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     b9 = tk.Button(mainframe, text="Quit", command=b9_close_root)
-    b9.grid(row=maxrow-1, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=10)
+    b9.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=30)
 
     main_gui.mainloop()
 
@@ -241,8 +249,6 @@ def get_dsdata(ds):
 
     print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
     print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
-
-
 
 
 make_gui()

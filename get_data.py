@@ -19,7 +19,7 @@ def getdata_gui():
         "daily_minimum_near_surface_air_temperature",
         "precipitation"
     ]
-    timestep = ["monthly", "hourly"]
+    timestep = ["monthly", "daily"]
 
     def get_save_dir():
         d = filedialog.askdirectory()
@@ -35,6 +35,8 @@ def getdata_gui():
                        east=float(tk_get_E.get()), west=float(tk_get_W.get())
                        )
         messagebox.showinfo("Data Download", info)
+        top_getdata.quit()
+        top_getdata.destroy()
 
     def close_getdatawin():
         top_getdata.quit()
