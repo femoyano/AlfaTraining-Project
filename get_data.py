@@ -64,64 +64,87 @@ def getdata_gui():
     tk_get_S.set(47.0)
     tk_get_W.set(6.0)
 
-    lab1 = tk.Label(top_getdata, text="Variable")
-    lab1.grid(row=0, column=0, columnspan=2)
+    irow = 0
+    lab1 = tk.Label(top_getdata, text="Variable", justify='left')
+    lab1.grid(row=irow, column=0, columnspan=3,  sticky=tk.W, padx=10, pady=5)
+    irow += 1
+
     for val, climvar in enumerate(climvars):  # enumerate generates tuples
         tk.Radiobutton(top_getdata,
                        text=climvar,
                        variable=tk_get_var,
                        indicatoron=1,
                        # command=,
-                       value=climvar).grid(sticky=tk.W + tk.E)  # .grid(sticky=tk.W + tk.E)  # returns str
+                       value=climvar).grid(row=irow, column=0, columnspan=3,  sticky=tk.W, padx=20)  # .grid(sticky=tk.W + tk.E)  # returns str
+        irow += 1
 
-    lab2 = tk.Label(top_getdata, text="Time Step")
-    lab2.grid()
+    lab2 = tk.Label(top_getdata, text="Time Step", justify='left')
+    lab2.grid(row=irow, column=0,  columnspan=3,  sticky=tk.W, padx=10, pady=5)
+    irow += 1
+
     for val, step in enumerate(timestep):  # enumerate generates tuples
         tk.Radiobutton(top_getdata,
                        text=step,
                        variable=tk_get_step,
                        indicatoron=1,
                        # command=,
-                       value=step).grid(sticky=tk.W + tk.E)  # .grid(sticky=tk.W + tk.E)  # returns str
+                       value=step).grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=20)  # returns str
+        irow += 1
 
-    lab3 = tk.Label(top_getdata, text="Start date (yyyy-mm-dd): ")
-    lab3.grid()
+    mt1 = 'Choose a time range between 2020-01-01 and 2300-12-31'
+    hlab1 = tk.Label(top_getdata, text=mt1)
+    hlab1.grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=10, pady=10)
+    irow += 1
+
+    lab3 = tk.Label(top_getdata, text="Start date (yyyy-mm-dd)")
+    lab3.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_sdate = tk.Entry(top_getdata, textvariable=tk_get_sdate)
-    ent_sdate.grid()
+    ent_sdate.grid(row=irow, column=2, columnspan=1,  sticky=tk.W, padx=10)
+    irow += 1
 
-    lab4 = tk.Label(top_getdata, text="End date (yyyy-mm-dd): ")
-    lab4.grid()
+    lab4 = tk.Label(top_getdata, text="End date (yyyy-mm-dd)")
+    lab4.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_edate = tk.Entry(top_getdata, textvariable=tk_get_edate)
-    ent_edate.grid()
+    ent_edate.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
 
-    lab5 = tk.Label(top_getdata, text="North bound (-90.0 to 90.0): ")
-    lab5.grid()
+    mt2 = 'Choose the region boundaries'
+    hlab2 = tk.Label(top_getdata, text=mt2)
+    hlab2.grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=10, pady=10)
+    irow += 1
+
+    lab5 = tk.Label(top_getdata, text="North bound (-90.0 to 90.0)")
+    lab5.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_n = tk.Entry(top_getdata, textvariable=tk_get_N)
-    ent_n.grid()
+    ent_n.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
 
-    lab6 = tk.Label(top_getdata, text="South bound (-90.0 to 90.0): ")
-    lab6.grid()
+    lab6 = tk.Label(top_getdata, text="South bound (-90.0 to 90.0)")
+    lab6.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_s = tk.Entry(top_getdata, textvariable=tk_get_S)
-    ent_s.grid()
+    ent_s.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
 
-    lab7 = tk.Label(top_getdata, text="East bound (-180.0 to 180.0): ")
-    lab7.grid()
+    lab7 = tk.Label(top_getdata, text="East bound (-180.0 to 180.0)")
+    lab7.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_e = tk.Entry(top_getdata, textvariable=tk_get_E)
-    ent_e.grid()
+    ent_e.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
 
-    lab8 = tk.Label(top_getdata, text="West bound (-180.0 to 180.0): ")
-    lab8.grid()
+    lab8 = tk.Label(top_getdata, text="West bound (-180.0 to 180.0)")
+    lab8.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_w = tk.Entry(top_getdata, textvariable=tk_get_W)
-    ent_w.grid()
+    ent_w.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
 
-    dir_button = tk.Button(top_getdata, text="Save Folder", command=get_save_dir)
-    dir_button.grid()
+    dir_button = tk.Button(top_getdata, text="Choose Folder", command=get_save_dir, padx=5)
+    dir_button.grid(row=irow, column=0, sticky=tk.W, padx=10, pady=5)
 
-    dd_button = tk.Button(top_getdata, text="Download Data", command=call_getdata)
-    dd_button.grid()
+    dd_button = tk.Button(top_getdata, text="Download Data", command=call_getdata, padx=5)
+    dd_button.grid(row=irow, column=1, sticky=tk.W, padx=10, pady=5)
 
-    close_button = tk.Button(top_getdata, text="Close", command=close_getdatawin)
-    close_button.grid()
+    close_button = tk.Button(top_getdata, text="Cancel", command=close_getdatawin, padx=5)
+    close_button.grid(row=irow, column=2, sticky=tk.E, padx=10, pady=5)
 
     top_getdata.mainloop()
 
