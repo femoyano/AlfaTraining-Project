@@ -16,14 +16,15 @@ Check kap_19_tkinter_validate1 for callback functions validating inputs
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox
+
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import netCDF4 as nC
 from get_data import getdata_gui
 from stats import getstats
-from plots import *
 import itertools as it
 import numpy as np
-
+import cartopy.crs as ccrs
 
 nc_ds = []
 ds_vars = {}
@@ -40,22 +41,18 @@ tk_sel_var = tk.StringVar()
 tk_summary = tk.StringVar()
 tk_summary.set('Select a variable to display summary info.')
 
-# Figure ojects
-fig1 = plt.Figure(figsize=(9, 6))
-axes1 = fig1.add_subplot(111)
-
 
 def make_gui():
     def b1_open_file():
         global nc_ds
         fpath = filedialog.askopenfilename(filetypes=[("netcdf", "*.nc"), ("All Files", "*.*")])
         if fpath:
-            nc_ds.append(nC.Dataset(fpath, mode='r'))
-            get_dsdata(nc_ds[0])
+            nc_ds = nC.Dataset(fpath, mode='r')
+            get_dsdata(nc_ds)
+            nc_ds.close()
             c1['values'] = disp_vars
             c1.current(0)
             c1_entry_changed(1)
-            # b4.config(state="normal")
             b5.config(state="normal")
             b6.config(state="normal")
 
@@ -70,22 +67,44 @@ def make_gui():
             tk_summary.set(getstats(ds_vars, act_var, sel_v))  # pass to the function and set output to var
 
     def b5_call_plottime():
-        # messagebox.showinfo("Info", "Sorry, function still under construction.")
-        plot_time(ds_vars, act_var, str(tk_sel_var.get()))
+        b7.invoke()
         b7.config(state="normal")
+        plot_time(ds_vars, act_var, str(tk_sel_var.get()))
+        # canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
+        # # axes1.grid()
         canvas1.draw()
+        # toolbar.grid(row=0, column=1, sticky=tk.W)
+        # toolbar.update()
+
+    def plot_time(ds, var, dvar):
+        x = ds['time']
+        y = ds[var]
+        y = y.mean(axis=(1, 2))  # averages across lat and lon (i.e. entire region)
+        xlab = ds['time_units']
+        ylab = ds[var + '_units']
+        title = dvar
+        axes1.title = title
+        axes1.set_xlabel(xlab)
+        axes1.set_ylabel(ylab)
+        axes1.plot(x, y, color="blue")
 
     def b6_call_plotmap():
-        messagebox.showinfo("Info", "Sorry, function still under construction.")
-        # b7.invoke()
-        # b7.flash()
-        # cp.plot_map()
-        # canvas.draw()
-        # b7.config(state="normal")
+        b7.invoke()
+        b7.config(state="normal")
+        # plot_map(ds_vars, act_var, str(tk_sel_var.get()))
+        # canvas2.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
+        # axes2.grid()
+        # canvas2.draw()
+        # toolbar.grid(row=0, column=1, sticky=tk.W)
+        # toolbar.update()
+
+    def plot_map(ds, var, dvar):
+        pass
+        # axes2.coastlines()
 
     def b7_clear():
         axes1.cla()  # clear axes
-        canvas1.draw()
+        # axes2.cla()
 
     def b8_call_subset():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
@@ -97,25 +116,27 @@ def make_gui():
     def b4_save_summary():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
 
-    def plot_time(ds, var, dvar):
-        y = ds['time']
-        x = ds[var]
-        x = x.mean(axis=(1, 2))  # averages across lat and lon (i.e. entire region)
-        ylab = ds['time_units']
-        xlab = ds[var + '_units']
-        title = dvar
-        print(y[0],x[0],ylab, xlab, title)
-        axes1.set_xlabel(xlab)
-        axes1.set_ylabel(ylab)
-        axes1.scatter(x, y, color="blue")
-
-    def plot_map():
-        pass
-
     main_gui.wm_title('Climate Projections')
     mainframe = tk.Frame(main_gui)
     mainframe.grid()  # (row=0, column=0)
     maxrow = 40
+
+    # Figures, canvas and axes
+    fig1 = plt.Figure(figsize=(9, 6))
+    axes1 = fig1.add_subplot(111)
+    canvas1 = FigureCanvasTkAgg(fig1, master=mainframe)
+    canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
+    # axes1.grid()
+    # canvas1.draw()
+
+    # fig2 = plt.Figure(figsize=(9, 6))
+    # axes2 = fig2.add_subplot(111, projection=ccrs.PlateCarree())
+    # canvas2 = FigureCanvasTkAgg(fig2, master=mainframe)
+
+    # Create figure toolbar object
+    toolbar = NavigationToolbar2Tk(canvas1, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
+    toolbar.grid(row=0, column=1, sticky=tk.W)
+    toolbar.update()
 
     # Make a button frame and populate
     # mainframe = tk.Frame(main_gui)
@@ -124,7 +145,7 @@ def make_gui():
     h1 = tk.Label(mainframe, text='MENU OPTIONS')
     h1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
-    b1 = tk.Button(mainframe, text="Load File", command=b1_open_file)  #, height=1)
+    b1 = tk.Button(mainframe, text="Load File", command=b1_open_file)
     b1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     b2 = tk.Button(mainframe, text="Download Data", command=b2_call_getdatagui)
@@ -136,7 +157,7 @@ def make_gui():
     b6 = tk.Button(mainframe, text="Plot Map", command=b6_call_plotmap, state="disabled")
     b6.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
-    b7 = tk.Button(mainframe, text="Clear Map", command=b7_clear, activeforeground="red", state="disabled")
+    b7 = tk.Button(mainframe, text="Clear Plot", command=b7_clear, activeforeground="red", state="disabled")
     b7.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30)
     irow += 1
     b8 = tk.Button(mainframe, text="Subset Data", command=b8_call_subset, state="disabled")
@@ -161,16 +182,6 @@ def make_gui():
     irow += 1
     b9 = tk.Button(mainframe, text="Quit", command=b9_close_root)
     b9.grid(row=maxrow-1, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=10)
-
-    # Create canvas for figures
-    canvas1 = FigureCanvasTkAgg(fig1, master=mainframe)
-    canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=maxrow)
-    axes1.grid()
-
-    # Add a figure toolbar
-    toolbar = NavigationToolbar2Tk(canvas1, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
-    toolbar.grid(row=0, column=1, sticky=tk.W)
-    toolbar.update()
 
     main_gui.mainloop()
 
@@ -230,6 +241,8 @@ def get_dsdata(ds):
 
     print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
     print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
+
+
 
 
 make_gui()
