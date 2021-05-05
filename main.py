@@ -29,9 +29,6 @@ import numpy as np
 
 nc_ds = []
 ds_vars = {}
-#            {'time': [], 'lat': [], 'lon': [],
-#            'max_lat': [], 'min_lat': [], 'max_lon': [], 'min_lon': [],
-#            'time_unit': [], 'lat_unit': [], 'lon_unit': []}
 nc_vars = []
 disp_vars = ["---none loaded---"]
 some_vars = {'tas': 'Surface Air Temperature',
@@ -62,7 +59,11 @@ def make_gui():
     def b4_getstats():
         dis_v = str(c1.varselect.get())  # get the displayed variable
         act_v = nc_vars[disp_vars.index(dis_v)]  # find the corresponding nc variable
-        getstats(nc_ds[0], act_v, dis_v)  # pass to the function
+        try:
+            stats = getstats(ds_vars, act_v, dis_v)  # pass to the function
+            messagebox.showinfo("Summary", stats[0])
+        except TypeError as e:
+            print(e)
 
     def b5_call_plottime():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
@@ -87,6 +88,7 @@ def make_gui():
 
     def b9_close_root():
         main_gui.quit()
+        main_gui.destroy()
 
     main_gui.wm_title('Climate Projections')
 
@@ -107,32 +109,32 @@ def make_gui():
     buttonframe = tk.Frame(main_gui)
     buttonframe.grid(row=0, column=0, sticky=tk.N)  # row=0, column=0, sticky=tk.N + tk.W)
     irow = 0
-    b1 = tk.Button(buttonframe, text="Load file", command=b1_open_file)
+    b1 = tk.Button(buttonframe, text="Load File", command=b1_open_file)
     b1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=30)
     irow += 1
-    b2 = tk.Button(buttonframe, text="Download data", command=b2_call_getdatagui)
+    b2 = tk.Button(buttonframe, text="Download Sata", command=b2_call_getdatagui)
     b2.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    l1 = tk.Label(buttonframe, text="Selected variable")  # , command=c1_varselect)
+    l1 = tk.Label(buttonframe, text="Selected Variable")  # , command=c1_varselect)
     l1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     c1 = Combo(buttonframe)
     c1.create(disp_vars)
     c1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    b4 = tk.Button(buttonframe, text="Summary stats", command=b4_getstats, state="disabled")
+    b4 = tk.Button(buttonframe, text="Summary Stats", command=b4_getstats, state="disabled")
     b4.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    b5 = tk.Button(buttonframe, text="Plot time", command=b5_call_plottime, state="disabled")
+    b5 = tk.Button(buttonframe, text="Plot Time", command=b5_call_plottime, state="disabled")
     b5.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    b6 = tk.Button(buttonframe, text="Plot map", command=b6_call_plotmap, state="disabled")
+    b6 = tk.Button(buttonframe, text="Plot Map", command=b6_call_plotmap, state="disabled")
     b6.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     b7 = tk.Button(buttonframe, text="Clear", command=b7_clear, activeforeground="red", state="disabled")
     b7.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    b8 = tk.Button(buttonframe, text="Subset data", command=b8_call_subset, state="disabled")
+    b8 = tk.Button(buttonframe, text="Subset Data", command=b8_call_subset, state="disabled")
     b8.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     b9 = tk.Button(buttonframe, text="Quit", command=b9_close_root)
@@ -186,9 +188,14 @@ def get_dsdata(ds):
     ds_vars['min_lon'] = ds.variables['lon'][size_lon - 1].data
 
     # Get units of the dims
-    ds_vars['time_unit'] = ds.variables['time'].units
-    ds_vars['lat_unit'] = ds.variables['lat'].units
-    ds_vars['lon_unit'] = ds.variables['lon'].units
+    ds_vars['time_units'] = ds.variables['time'].units
+    ds_vars['lat_units'] = ds.variables['lat'].units
+    ds_vars['lon_units'] = ds.variables['lon'].units
+
+    for n in nc_vars:
+        v = ds.variables[n][:, :, :]
+        ds_vars[n] = np.ma.asarray(v)
+        ds_vars[n+'_units'] = ds.variables[n].units
 
     print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
     print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
