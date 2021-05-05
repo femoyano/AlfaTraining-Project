@@ -29,8 +29,8 @@ def getstats(ds_vars, act_v, dis_v):
          'Overall Mean: ' + str(var_m) + '\n' +
          'Standard Deviation: ' + str(var_sd) + '\n' +
          'Region coordinates: ' + '\n' +
-         str(south) + ' to ' + str(north) + str(lat_units) + '\n' +
-         str(west) + ' to ' + str(east) + str(lon_units) + '\n']
+         str(south) + ' to ' + str(north) + ' ' + str(lat_units) + '\n' +
+         str(west) + ' to ' + str(east) + ' ' + str(lon_units) + '\n']
 
-    return s
+    return s[0]
 

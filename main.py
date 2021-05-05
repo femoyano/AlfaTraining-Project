@@ -12,58 +12,56 @@ sure the UI controls are displayed as long as possible.
 Check kap_19_tkinter_validate1 for callback functions validating inputs
 """
 
+# from matplotlib.backend_bases import key_press_handler  # default Matplotlib key bindings.
 import tkinter as tk
-# from tkinter import ttk
+from tkinter import ttk
 from tkinter import filedialog, messagebox
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-# from matplotlib.backend_bases import key_press_handler  # default Matplotlib key bindings.
-import matplotlib.pyplot as plt
-# import matplotlib as mpl
 import netCDF4 as nC
 from get_data import getdata_gui
-from climate_stats import getstats
-# from climate_plots import *
-from var_select import Combo
+from stats import getstats
+from plots import *
 import itertools as it
 import numpy as np
+
 
 nc_ds = []
 ds_vars = {}
 nc_vars = []
-disp_vars = ["---none loaded---"]
-some_vars = {'tas': 'Surface Air Temperature',
-             'tasmax': 'Max Air Temperature',
-             'tasmin': 'Min Air Temperature',
-             'pr': 'Precipitation'}
+disp_vars = ['--- no file loaded ---']
+known_vars = {'tas': 'Surface Air Temperature',
+              'tasmax': 'Max Air Temperature',
+              'tasmin': 'Min Air Temperature',
+              'pr': 'Precipitation'}
 
 main_gui = tk.Tk()  # create the gui root object
-tk_ds_varnames = tk.Variable()
-tk_ds_varnames.set(["-- No file loaded --"])
-tk_active_var = tk.StringVar()
+tk_sel_var = tk.StringVar()
+tk_summary = tk.StringVar()
+tk_summary.set('Select a variable to display summary info.')
 
 
 def make_gui():
     def b1_open_file():
         global nc_ds
         fpath = filedialog.askopenfilename(filetypes=[("netcdf", "*.nc"), ("All Files", "*.*")])
-        nc_ds.append(nC.Dataset(fpath, mode='r'))
-        get_dsdata(nc_ds[0])
-        c1.create(disp_vars)
-        b4.config(state="normal")
-        b5.config(state="normal")
-        b6.config(state="normal")
+        if fpath:
+            nc_ds.append(nC.Dataset(fpath, mode='r'))
+            get_dsdata(nc_ds[0])
+            c1['values'] = disp_vars
+            c1.current(0)
+            c1_entry_changed(1)
+            # b4.config(state="normal")
+            b5.config(state="normal")
+            b6.config(state="normal")
 
     def b2_call_getdatagui():
         getdata_gui()
 
-    def b4_getstats():
-        dis_v = str(c1.varselect.get())  # get the displayed variable
-        act_v = nc_vars[disp_vars.index(dis_v)]  # find the corresponding nc variable
-        try:
-            stats = getstats(ds_vars, act_v, dis_v)  # pass to the function
-            messagebox.showinfo("Summary", stats[0])
-        except TypeError as e:
-            print(e)
+    def c1_entry_changed(event):
+        sel_v = str(tk_sel_var.get())  # get the displayed variable
+        if sel_v != '--- no file loaded ---':
+            act_v = nc_vars[disp_vars.index(sel_v)]  # find the corresponding nc variable
+            tk_summary.set(getstats(ds_vars, act_v, sel_v))  # pass to the function and set output to var
 
     def b5_call_plottime():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
@@ -90,6 +88,9 @@ def make_gui():
         main_gui.quit()
         main_gui.destroy()
 
+    def b4_save_summary():
+        messagebox.showinfo("Info", "Sorry, function still under construction.")
+
     main_gui.wm_title('Climate Projections')
 
     # Create a plotting frame
@@ -112,18 +113,16 @@ def make_gui():
     b1 = tk.Button(buttonframe, text="Load File", command=b1_open_file)
     b1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=30)
     irow += 1
-    b2 = tk.Button(buttonframe, text="Download Sata", command=b2_call_getdatagui)
+    b2 = tk.Button(buttonframe, text="Download Data", command=b2_call_getdatagui)
     b2.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     l1 = tk.Label(buttonframe, text="Selected Variable")  # , command=c1_varselect)
     l1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    c1 = Combo(buttonframe)
-    c1.create(disp_vars)
+    c1 = ttk.Combobox(buttonframe, textvariable=tk_sel_var, values=disp_vars, justify='center')
+    c1.bind('<<ComboboxSelected>>', c1_entry_changed)
+    c1.current(0)
     c1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
-    irow += 1
-    b4 = tk.Button(buttonframe, text="Summary Stats", command=b4_getstats, state="disabled")
-    b4.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     b5 = tk.Button(buttonframe, text="Plot Time", command=b5_call_plottime, state="disabled")
     b5.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
@@ -131,11 +130,20 @@ def make_gui():
     b6 = tk.Button(buttonframe, text="Plot Map", command=b6_call_plotmap, state="disabled")
     b6.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
-    b7 = tk.Button(buttonframe, text="Clear", command=b7_clear, activeforeground="red", state="disabled")
+    b7 = tk.Button(buttonframe, text="Clear Map", command=b7_clear, activeforeground="red", state="disabled")
     b7.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     b8 = tk.Button(buttonframe, text="Subset Data", command=b8_call_subset, state="disabled")
     b8.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
+    irow += 1
+    l2 = tk.Label(buttonframe, text="Summary Info")
+    l2.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
+    irow += 1
+    m1 = tk.Message(buttonframe, relief='sunken', textvariable=tk_summary, justify='left', width=200)
+    m1.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, padx=5, ipadx=5)
+    irow += 1
+    b4 = tk.Button(buttonframe, text="Save Summary Info", command=b4_save_summary, state="disabled")
+    b4.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
     irow += 1
     b9 = tk.Button(buttonframe, text="Quit", command=b9_close_root)
     b9.grid(row=irow, column=0, sticky=tk.N + tk.S + tk.E + tk.W, ipadx=10)
@@ -166,8 +174,8 @@ def get_dsdata(ds):
     # Add to display variables (using display name if available)
     disp_vars = []
     for v in nc_vars:
-        if v in some_vars.keys():
-            disp_vars.append(some_vars[v])
+        if v in known_vars.keys():
+            disp_vars.append(known_vars[v])
         else:
             disp_vars.append(v)
 
@@ -195,7 +203,7 @@ def get_dsdata(ds):
     for n in nc_vars:
         v = ds.variables[n][:, :, :]
         ds_vars[n] = np.ma.asarray(v)
-        ds_vars[n+'_units'] = ds.variables[n].units
+        ds_vars[n + '_units'] = ds.variables[n].units
 
     print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
     print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
