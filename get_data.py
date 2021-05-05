@@ -31,8 +31,8 @@ def getdata_gui():
                        time_step=str(tk_get_step.get()),
                        start_date=str(tk_get_sdate.get()),
                        end_date=str(tk_get_edate.get()),
-                       north=float(tk_get_N.get()), south=float(tk_get_S.get()),
-                       east=float(tk_get_E.get()), west=float(tk_get_W.get())
+                       north=float(tk_north.get()), south=float(tk_south.get()),
+                       east=float(tk_east.get()), west=float(tk_west.get())
                        )
         messagebox.showinfo("Data Download", info)
         top_getdata.quit()
@@ -51,20 +51,20 @@ def getdata_gui():
     tk_get_step = tk.StringVar()
     tk_get_sdate = tk.StringVar()
     tk_get_edate = tk.StringVar()
-    tk_get_N = tk.DoubleVar()
-    tk_get_E = tk.DoubleVar()
-    tk_get_S = tk.DoubleVar()
-    tk_get_W = tk.DoubleVar()
+    tk_north = tk.DoubleVar()
+    tk_east = tk.DoubleVar()
+    tk_south = tk.DoubleVar()
+    tk_west = tk.DoubleVar()
     # Set defaults (default coordinates given for Germany)
     tk_save_dir.set(".")
     tk_get_var.set("near_surface_air_temperature")
     tk_get_step.set("monthly")
     tk_get_sdate.set("2020-01-01")
     tk_get_edate.set("2030-12-31")
-    tk_get_N.set(55.0)
-    tk_get_E.set(15.0)
-    tk_get_S.set(47.0)
-    tk_get_W.set(6.0)
+    tk_north.set(55.0)
+    tk_east.set(15.0)
+    tk_south.set(47.0)
+    tk_west.set(6.0)
 
     irow = 0
     lab1 = tk.Label(top_getdata, text="Variable", justify='left')
@@ -77,7 +77,7 @@ def getdata_gui():
                        variable=tk_get_var,
                        indicatoron=1,
                        # command=,
-                       value=climvar).grid(row=irow, column=0, columnspan=3,  sticky=tk.W, padx=20)  # .grid(sticky=tk.W + tk.E)  # returns str
+                       value=climvar).grid(row=irow, column=0, columnspan=3,  sticky=tk.W, padx=20)
         irow += 1
 
     lab2 = tk.Label(top_getdata, text="Time Step", justify='left')
@@ -117,25 +117,25 @@ def getdata_gui():
 
     lab5 = tk.Label(top_getdata, text="North bound (-90.0 to 90.0)")
     lab5.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
-    ent_n = tk.Entry(top_getdata, textvariable=tk_get_N)
+    ent_n = tk.Entry(top_getdata, textvariable=tk_north)
     ent_n.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 
     lab6 = tk.Label(top_getdata, text="South bound (-90.0 to 90.0)")
     lab6.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
-    ent_s = tk.Entry(top_getdata, textvariable=tk_get_S)
+    ent_s = tk.Entry(top_getdata, textvariable=tk_south)
     ent_s.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 
     lab7 = tk.Label(top_getdata, text="East bound (-180.0 to 180.0)")
     lab7.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
-    ent_e = tk.Entry(top_getdata, textvariable=tk_get_E)
+    ent_e = tk.Entry(top_getdata, textvariable=tk_east)
     ent_e.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 
     lab8 = tk.Label(top_getdata, text="West bound (-180.0 to 180.0)")
     lab8.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
-    ent_w = tk.Entry(top_getdata, textvariable=tk_get_W)
+    ent_w = tk.Entry(top_getdata, textvariable=tk_west)
     ent_w.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 

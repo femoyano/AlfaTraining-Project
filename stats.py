@@ -33,4 +33,3 @@ def getstats(ds_vars, act_v, dis_v):
          str(west) + ' to ' + str(east) + ' ' + str(lon_units) + '\n']
 
     return s[0]
-
