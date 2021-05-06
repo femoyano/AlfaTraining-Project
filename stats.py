@@ -3,6 +3,7 @@ Calculate and return some summary statistics for the climate data
 """
 
 import numpy as np
+import itertools as it
 
 
 def getstats(ds_vars, act_v, dis_v):

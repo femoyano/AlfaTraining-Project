@@ -22,10 +22,11 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 import netCDF4 as nC
 from get_data import getdata_gui
 from stats import getstats
-import itertools as it
-import numpy as np
 import cartopy as ct
 import cartopy.crs as ccrs
+import numpy as np
+import itertools as it
+
 
 nc_ds = []
 ds_vars = {}
@@ -201,6 +202,7 @@ def get_dsdata(ds):
     global disp_vars
     global nc_vars
     global ds_vars
+    global known_vars
 
     nc_vars = list(ds.variables.keys())
     nc_dims = list(ds.dimensions.keys())
@@ -247,8 +249,8 @@ def get_dsdata(ds):
         ds_vars[n] = np.ma.asarray(v)
         ds_vars[n + '_units'] = ds.variables[n].units
 
-    print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
-    print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
+    # print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
+    # print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
 
 
 if __name__ == '__main__':
