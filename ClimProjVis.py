@@ -1,19 +1,17 @@
 """
-Main file
+Climate Projections Visualizer:
+- Download proected climate
+- Get summary statistics
+- Visualize data
 
-Note:
-Packing order is important. Widgets are processed sequentially and if there
-is no space left, because the window is too small, they are not displayed.
-The canvas is rather flexible in its size, so we pack it last which makes
-sure the UI controls are displayed as long as possible.
-
-Check kap_19_tkinter_validate1 for callback functions validating inputs
+This file contains all the entire programm code.
 """
 
 # from matplotlib.backend_bases import key_press_handler  # default Matplotlib key bindings.
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox
+from tkinter import font
 # from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -27,6 +25,8 @@ import zipfile
 import os
 
 
+# Defining global variables ----
+
 nc_ds = []
 ds_vars = {}
 nc_vars = []
@@ -38,7 +38,13 @@ known_vars = {'tas': 'Surface Air Temperature',
               'pr': 'Precipitation'}
 
 
+# Function declarations ----
+
 def make_gui():
+    """
+    This is the starting function. It crates the main interface and plots data
+    :return: none
+    """
     def b1_open_file():
         global nc_ds
         fpath = filedialog.askopenfilename(filetypes=[("netcdf", "*.nc"), ("All Files", "*.*")])
@@ -103,6 +109,12 @@ def make_gui():
     def b7_clear():
         ax1.cla()
         fig2.clf()
+        ax1.grid()
+        ax2 = fig2.add_subplot(111, projection=ccrs.PlateCarree())
+        ax2.set_global()
+        ax2.add_feature(ct.feature.BORDERS, linestyle=':')
+        ax2.add_feature(ct.feature.OCEAN)
+        ax2.add_feature(ct.feature.COASTLINE)
         canvas1.draw()
         canvas2.draw()
 
@@ -120,75 +132,90 @@ def make_gui():
     tk_sel_var = tk.StringVar()
     tk_summary = tk.StringVar()
     tk_summary.set('Select a variable to display summary info.')
+    font1 = font.Font(family='mincho')  # Issue: font rendering does not seem to work well.
+    # font1 = font.Font(family='latin modern roman')  # Issue: font rendering does not seem to work well.
 
     main_gui.wm_title('Climate Projections')
-    mainframe = tk.Frame(main_gui)
-    mainframe.grid()  # (row=0, column=0)
+    buttonframe = tk.Frame(main_gui)
+    buttonframe.grid(row=0, column=0, rowspan=5)
+    tbarframe1 = tk.Frame(main_gui)
+    tbarframe1.grid(row=0, column=1)
+    plotframe1 = tk.Frame(main_gui)
+    plotframe1.grid(row=1, column=1)
+    tbarframe2 = tk.Frame(main_gui)
+    tbarframe2.grid(row=2, column=1)
+    plotframe2 = tk.Frame(main_gui)
+    plotframe2.grid(row=3, column=1)
+
     maxrow = 40
     midrow = 20
 
-    # Figures, canvas and axes
+    # Figures, canvas and axes and toolbar
     fig1 = plt.Figure(figsize=(9, 4))
     ax1 = fig1.add_subplot(111)
     ax1.grid()
-    canvas1 = FigureCanvasTkAgg(fig1, master=mainframe)
-    canvas1.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=midrow - 1)
-    # Create figure toolbar object
-    toolbar1 = NavigationToolbar2Tk(canvas1, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
-    toolbar1.grid(row=0, column=1, sticky=tk.W)
+    canvas1 = FigureCanvasTkAgg(fig1, master=plotframe1)
+    toolbar1 = NavigationToolbar2Tk(canvas1, tbarframe1)  # pack_toolbar = false to use .grid
+    toolbar1.pack()  # grid(row=0, column=0, sticky=tk.W)
     toolbar1.update()
+    canvas1.get_tk_widget().pack()  # grid(row=1, column=0)
 
     # Figures, canvas and axes
     fig2 = plt.Figure(figsize=(9, 4))
-    canvas2 = FigureCanvasTkAgg(fig2, master=mainframe)
-    canvas2.get_tk_widget().grid(row=midrow + 1, column=1, columnspan=1, rowspan=maxrow)
-    canvas2.draw()
+    canvas2 = FigureCanvasTkAgg(fig2, master=plotframe2)
     # Create figure toolbar object
-    toolbar2 = NavigationToolbar2Tk(canvas2, mainframe, pack_toolbar=False)  # pack_toolbar = false to use .grid
-    toolbar2.grid(row=midrow, column=1, sticky=tk.W)
+    toolbar2 = NavigationToolbar2Tk(canvas2, tbarframe2)  # pack_toolbar = false to use .grid
+    toolbar2.pack()  # grid(row=0, column=0, sticky=tk.W)
+    canvas2.get_tk_widget().pack()  # grid(row=1, column=0)
+    ax2 = fig2.add_subplot(111, projection=ccrs.PlateCarree())
+    ax2.set_global()
+    ax2.add_feature(ct.feature.BORDERS, linestyle=':')
+    ax2.add_feature(ct.feature.OCEAN)
+    ax2.add_feature(ct.feature.COASTLINE)
+    canvas2.draw()
     toolbar2.update()
 
     # Buttons
     irow = 0
-    h1 = tk.Label(mainframe, text='MENU OPTIONS')
-    h1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    h1 = tk.Label(buttonframe, text='MENU OPTIONS')
+    h1.grid(row=irow, column=0, sticky=tk.N+ tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    b1 = tk.Button(mainframe, text="Load File", command=b1_open_file)
-    b1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b1 = tk.Button(buttonframe, text="Load File", command=b1_open_file)
+    b1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    b2 = tk.Button(mainframe, text="Download Data", command=b2_call_getdatagui)
-    b2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b2 = tk.Button(buttonframe, text="Download Data", command=b2_call_getdatagui)
+    b2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    b5 = tk.Button(mainframe, text="Plot Time", command=b5_plottime, state="disabled")
-    b5.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b5 = tk.Button(buttonframe, text="Plot Time", command=b5_plottime, state="disabled")
+    b5.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    b6 = tk.Button(mainframe, text="Plot Map", command=b6_plotmap, state="disabled")
-    b6.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b6 = tk.Button(buttonframe, text="Plot Map", command=b6_plotmap, state="disabled")
+    b6.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    b7 = tk.Button(mainframe, text="Clear Plots", command=b7_clear, state="disabled")
-    b7.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b7 = tk.Button(buttonframe, text="Clear Plots", command=b7_clear, state="disabled")
+    b7.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    b8 = tk.Button(mainframe, text="Subset Data", command=b8_call_subset, state="disabled")
-    b8.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b8 = tk.Button(buttonframe, text="Subset Data", command=b8_call_subset, state="disabled")
+    b8.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 3
-    l1 = tk.Label(mainframe, text="Selected Variable")  # , command=c1_varselect)
-    l1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    b4 = tk.Button(buttonframe, text="Save Summary", command=b4_save_summary, state="disabled")
+    b4.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    c1 = ttk.Combobox(mainframe, textvariable=tk_sel_var, values=disp_vars, justify='center')
+    l1 = tk.Label(buttonframe, text="Selected Variable")  # , command=c1_varselect)
+    l1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    irow += 1
+    c1 = ttk.Combobox(buttonframe, textvariable=tk_sel_var, values=disp_vars, justify='center')
     c1.bind('<<ComboboxSelected>>', c1_entry_changed)
     c1.current(0)
-    c1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    c1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 3
-    l2 = tk.Label(mainframe, text="Summary Info")
-    l2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
+    l2 = tk.Label(buttonframe, text="Summary Info")
+    l2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
-    m1 = tk.Message(mainframe, relief='sunken', textvariable=tk_summary, justify='left', width=180)
-    m1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, padx=5, ipadx=5)
+    m1 = tk.Message(buttonframe, relief='sunken', textvariable=tk_summary, justify='left', width=200)
+    m1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, padx=10, ipadx=0)
     irow += 1
-    b4 = tk.Button(mainframe, text="Save Summary", command=b4_save_summary, state="disabled")
-    b4.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30)
-    irow += 1
-    b9 = tk.Button(mainframe, text="Quit", command=b9_close_root)
+    b9 = tk.Button(buttonframe, text="Quit", command=b9_close_root)
     b9.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=30)
 
     main_gui.mainloop()
@@ -196,7 +223,9 @@ def make_gui():
 
 def get_dsdata(ds):
     """
-    Dimensions of single layer climate variables are time:lat:lon
+    This function extracts data from a netCDF object.
+    Argument ds is a netcdf dataset.
+    Returns none but modifies global variables.
     """
     global disp_vars
     global nc_vars
@@ -244,7 +273,7 @@ def get_dsdata(ds):
     ds_vars['lon_units'] = ds.variables['lon'].units
 
     for n in nc_vars:
-        v = ds.variables[n][:, :, :]
+        v = ds.variables[n][:, :, :]  # Note: Dimensions of single layer climate variables are time:lat:lon
         ds_vars[n] = np.ma.asarray(v)
         ds_vars[n + '_units'] = ds.variables[n].units
 
@@ -253,6 +282,10 @@ def get_dsdata(ds):
 
 
 def getdata_gui():
+    """
+    getdata_gui() creates a window for user configuration of a climate data download request.
+    :return: none
+    """
     # Define vars for data download
     climvars = [
         "near_surface_air_temperature",
@@ -439,6 +472,13 @@ def getdata(var,
 
 
 def getstats(ds_v, act_v, dis_v):
+    """
+    Function obtains summary data for the active climate variable
+    :param ds_v:
+    :param act_v:
+    :param dis_v:
+    :return: A string with text describing the data summary values.
+    """
     # Get some ifno and stats
     var = ds_v[act_v]
     var_m = round(var.mean(), 8)
@@ -457,16 +497,19 @@ def getstats(ds_v, act_v, dis_v):
     lat_units = ds_v['lat_units']
     lon_units = ds_v['lon_units']
 
-    s = ['\n'+'Variable: ' + str(dis_v) + '\n' +
+    s = ['\n'+'Variable: ' + '\n' +
+         str(dis_v) + '\n\n' +
          'Units: ' + str(var_units) + '\n' +
-         'Overall Mean: ' + str(var_m) + '\n' +
-         'Standard Deviation: ' + str(var_sd) + '\n' +
-         'Region coordinates: ' + '\n' +
-         str(south) + ' to ' + str(north) + ' ' + str(lat_units) + '\n' +
-         str(west) + ' to ' + str(east) + ' ' + str(lon_units) + '\n']
+         'Overall Mean: ' + '\n' + str(var_m) + '\n' +
+         'Standard Deviation: ' + '\n' + str(var_sd) + '\n\n' +
+         'Region coordinates ' + '\n' +
+         str(lat_units) + ': \n' + str(south) + ' to ' + str(north) + '\n' +
+         str(lon_units) + ': \n' + str(west) + ' to ' + str(east)]
 
     return s[0]
 
+
+# Start the program ----
 
 if __name__ == '__main__':
     make_gui()
