@@ -6,13 +6,14 @@
 
 ### General Objectives
 
-Create a Python program that creates a GUI through which a user can select future projected climate data for a location [or region?] and obtain various statistics and visualizations.
+Create a graphical user interface (GUI) that allows downloading future projected climate data, taking into account a range of choices, including region, time, variable and future scenario. Various statistics and visualizations shoudl then be performed on the data.
 
 ### GUI options and functions
 
-User can select: 
+Data retrieval and loading
 
-* [choose data source. Local data files vs online (e.g. based on climate model)]
+* Open a local .nc file
+* Download data [choose data source. Local data files vs online (e.g. based on climate model)]
 * variable: surface temperature, precipitation, max/min temp [, other?]
 * time range [somewhere between present to 2100]
 * statistic to show
@@ -51,9 +52,30 @@ Output includes:
   
 ### The data
 
-Gett from 
+Data source:
+http://cds.climate.copernicus.eu/
+cmip6 climate projections data
 
+Requires:
+- python library: cdsapi
+- Follow instruction at: https://cds.climate.copernicus.eu/api-how-to
+
+---
+Notes:
 * Coordinates for Germany (rounded): 47N-55N and 6E-15E
 * Coordinates for Córdoba (rounded): 29S-35S and 62W to 66W
+---
 
-### 
+### ToDo
+
+- [ ] Add scenarios
+- [ ] Documentation: in code, help
+- [ ] Add time span to summary
+- [ ] Add coordinates to dir name
+- [ ] Make maps stick to windows border
+- [ ] Option: save data as .csv
+- [ ] Option: subset active dataset
+- [ ] Option: save summary as .json
+- [ ] Add yes/no dialogue with size estimate message before download
+- [ ] Add Class code
+- [ ] Improve plots

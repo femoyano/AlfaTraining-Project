@@ -37,11 +37,6 @@ known_vars = {'tas': 'Surface Air Temperature',
               'tasmin': 'Min Air Temperature',
               'pr': 'Precipitation'}
 
-main_gui = tk.Tk()  # create the gui root object
-tk_sel_var = tk.StringVar()
-tk_summary = tk.StringVar()
-tk_summary.set('Select a variable to display summary info.')
-
 
 def make_gui():
     def b1_open_file():
@@ -120,6 +115,11 @@ def make_gui():
 
     def b4_save_summary():
         messagebox.showinfo("Info", "Sorry, function still under construction.")
+
+    main_gui = tk.Tk()  # create the gui root object
+    tk_sel_var = tk.StringVar()
+    tk_summary = tk.StringVar()
+    tk_summary.set('Select a variable to display summary info.')
 
     main_gui.wm_title('Climate Projections')
     mainframe = tk.Frame(main_gui)
@@ -234,8 +234,8 @@ def get_dsdata(ds):
     size_lon = ds.variables['lon'].size
     ds_vars['min_lat'] = ds.variables['lat'][0].data
     ds_vars['max_lat'] = ds.variables['lat'][size_lat - 1].data
-    ds_vars['max_lon'] = ds.variables['lon'][0].data
-    ds_vars['min_lon'] = ds.variables['lon'][size_lon - 1].data
+    ds_vars['min_lon'] = ds.variables['lon'][0].data
+    ds_vars['max_lon'] = ds.variables['lon'][size_lon - 1].data
 
     # Get units of the dims
     ds_vars['time_units'] = ds.variables['time'].units
@@ -251,4 +251,5 @@ def get_dsdata(ds):
     print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
 
 
-make_gui()
+if __name__ == '__main__':
+    make_gui()

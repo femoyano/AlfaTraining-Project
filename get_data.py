@@ -26,13 +26,13 @@ def getdata_gui():
         tk_save_dir.set(d)
 
     def call_getdata():
-        info = getdata(save_dir=str(tk_save_dir.get()),
-                       var=str(tk_get_var.get()),
+        info = getdata(var=str(tk_get_var.get()),
                        time_step=str(tk_get_step.get()),
                        start_date=str(tk_get_sdate.get()),
                        end_date=str(tk_get_edate.get()),
                        north=float(tk_north.get()), south=float(tk_south.get()),
-                       east=float(tk_east.get()), west=float(tk_west.get())
+                       east=float(tk_east.get()), west=float(tk_west.get()),
+                       save_dir=str(tk_save_dir.get())
                        )
         messagebox.showinfo("Data Download", info)
         top_getdata.quit()
@@ -63,7 +63,7 @@ def getdata_gui():
     tk_get_edate.set("2030-12-31")
     tk_north.set(55.0)
     tk_east.set(15.0)
-    tk_south.set(47.0)
+    tk_south.set(46.0)
     tk_west.set(6.0)
 
     irow = 0
@@ -151,13 +151,14 @@ def getdata_gui():
     top_getdata.mainloop()
 
 
-def getdata(save_dir="./", var='near_surface_air_temperature',
-            time_step='monthly',
-            start_date='2020-01-01',
-            end_date='2030-12-31',
-            north=52.5, south=50.0, east=12.0, west=10.0,
+def getdata(var,
+            time_step,
+            start_date,
+            end_date,
+            north, south, east, west,
             experiment='ssp2_4_5',
-            model='mpi_esm1_2_lr'
+            model='mpi_esm1_2_lr',
+            save_dir="./"
             ):
 
     dates = start_date+'/'+end_date
@@ -192,4 +193,6 @@ def getdata(save_dir="./", var='near_surface_air_temperature',
 
 
 if __name__ == '__main__':
-    getdata()
+    root = tk.Tk()
+    root.withdraw()
+    getdata_gui()
