@@ -76,7 +76,7 @@ def make_gui():
         y = y.mean(axis=(1, 2))  # averages across lat and lon (i.e. entire region)
         xlab = ds_vars['time_units']
         ylab = ds_vars[act_var + '_units']
-        ax1.title.set_text(str(tk_sel_var.get())+': average temporal change in the region')
+        ax1.title.set_text(str(tk_sel_var.get())+' (averaged over space for selected time)')
         ax1.set_xlabel(xlab)
         ax1.set_ylabel(ylab)
         ax1.plot(x, y, color="blue")
@@ -96,7 +96,8 @@ def make_gui():
         ax2.add_feature(ct.feature.OCEAN)
         ax2.add_feature(ct.feature.COASTLINE)
         # ax2.coastlines()
-        ax1.title.set_text(str(tk_sel_var.get())+': average spatial values over time period')
+        ax2.title.set_text(str(tk_sel_var.get())+' (averaged over time for selected region)')
+        # ax2.gridlines(draw_labels=True)  # conflict with colorbar
         cf = ax2.contourf(lon, lat, val, 60, transform=ccrs.PlateCarree(), )
         cb = fig2.colorbar(cf, ax=ax2, orientation="vertical", pad=0.02, aspect=16, shrink=0.8)
         cb.set_label(unit, size=12, rotation=270, labelpad=15)
@@ -135,7 +136,7 @@ def make_gui():
     font1 = font.Font(family='mincho')  # Issue: font rendering does not seem to work well.
     # font1 = font.Font(family='latin modern roman')  # Issue: font rendering does not seem to work well.
 
-    main_gui.wm_title('Climate Projections')
+    main_gui.wm_title('Climate Projections Visualizer')
 
     tbarframe1 = tk.Frame(main_gui)
     tbarframe1.grid(row=0, column=1)
@@ -154,7 +155,7 @@ def make_gui():
     toolbar1 = NavigationToolbar2Tk(canvas1, tbarframe1)  # pack_toolbar = false to use .grid
     toolbar1.pack()  # grid(row=0, column=0, sticky=tk.W)
     toolbar1.update()
-    canvas1.get_tk_widget().pack()  # grid(row=1, column=0)
+    canvas1.get_tk_widget().pack(padx=10, pady=0)  # grid(row=1, column=0)
 
     # Figures, canvas and axes
     fig2 = plt.Figure(figsize=(9, 4))
@@ -162,7 +163,7 @@ def make_gui():
     # Create figure toolbar object
     toolbar2 = NavigationToolbar2Tk(canvas2, tbarframe2)  # pack_toolbar = false to use .grid
     toolbar2.pack()  # grid(row=0, column=0, sticky=tk.W)
-    canvas2.get_tk_widget().pack()  # grid(row=1, column=0)
+    canvas2.get_tk_widget().pack(padx=10, pady=0)  # grid(row=1, column=0)
     ax2 = fig2.add_subplot(111, projection=ccrs.PlateCarree())
     ax2.set_global()
     ax2.add_feature(ct.feature.BORDERS, linestyle=':')
