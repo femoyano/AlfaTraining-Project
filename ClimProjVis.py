@@ -142,8 +142,10 @@ def make_gui():
         main_gui.destroy()
 
     def b4_save_summary():
-        with open('summary.json', 'w') as fp:
+        jfn = 'summary.json'
+        with open(jfn, 'w') as fp:
             json.dump(sumdict, fp)
+        messagebox.showinfo('Save summary', f"Summary data saved to: {jfn}")
 
     main_gui = tk.Tk()  # create the gui root object
     tk_sel_var = tk.StringVar()
@@ -264,11 +266,11 @@ def getdata_gui():
     def call_getdata():
         info = getdata(var=str(tk_get_var.get()),
                        time_step=str(tk_get_step.get()),
-                       scenario=str(tk_get_scen.get()),
                        start_date=str(tk_get_sdate.get()),
                        end_date=str(tk_get_edate.get()),
                        north=float(tk_north.get()), south=float(tk_south.get()),
                        east=float(tk_east.get()), west=float(tk_west.get()),
+                       scenario=str(tk_get_scen.get()),
                        save_dir=str(tk_save_dir.get())
                        )
         messagebox.showinfo("Data Download", info)
@@ -405,10 +407,10 @@ def getdata_gui():
 
 def getdata(var,
             time_step,
-            scenario,
             start_date,
             end_date,
             north, south, east, west,
+            scenario,
             model='mpi_esm1_2_lr',
             save_dir="./"
             ):
@@ -430,7 +432,7 @@ def getdata(var,
         'projections-cmip6',
         {
             'temporal_resolution': time_step,
-            'experiment': experiment,
+            'experiment': scenario,
             'level': 'single_levels',
             'variable': var,
             'model': model,
@@ -521,8 +523,8 @@ def getstats(ds_v, act_v, dis_v):
     var = ds_v[act_v]
     var_m = round(var.mean(), 8)
     var_sd = round(var_m / len(var) ** 0.5, 8)
-    # var_m = var.mean()
-    # var_sd = var_m / len(var) ** 0.5
+    var_max = round(np.amax(var), 8)
+    var_min = round(np.amin(var), 8)
     var_sm = var.mean(axis=(1, 2))  # get the spatial mean (keeps the time dimension)
     var_tm = var.mean(axis=0)  # get of mean over time (keeps lat/lon)
     var_sm_sd = var_sm / len(var_sm) ** 0.5
@@ -535,8 +537,9 @@ def getstats(ds_v, act_v, dis_v):
     lat_units = ds_v['lat_units']
     lon_units = ds_v['lon_units']
 
-    sd = {'variable': str(dis_v), 'units': str(var_units), 'overall mean': var_m, 'stdev': var_sd,
-          'max_lat': str(north), 'min_lat': str(south), 'max_lon': str(east), 'min_lon': str(west)}
+    sd = {'variable': str(dis_v), 'units': str(var_units), 'overall mean': str(var_m),
+          'stdev': str(var_sd), 'max': str(var_max), 'min': str(var_min), 'max_lat': str(north),
+          'min_lat': str(south), 'max_lon': str(east), 'min_lon': str(west)}
 
     s = ['\n' + 'Variable: ' + '\n' +
          str(dis_v) + '\n\n' +
