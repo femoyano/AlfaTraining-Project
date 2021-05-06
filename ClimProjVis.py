@@ -1,10 +1,10 @@
 """
 Climate Projections Visualizer:
-- Download proected climate
+- Download projected (modeled) climate data
 - Get summary statistics
 - Visualize data
 
-This file contains all the entire programm code.
+This file contains the entire programm code.
 """
 
 # from matplotlib.backend_bases import key_press_handler  # default Matplotlib key bindings.
@@ -136,8 +136,7 @@ def make_gui():
     # font1 = font.Font(family='latin modern roman')  # Issue: font rendering does not seem to work well.
 
     main_gui.wm_title('Climate Projections')
-    buttonframe = tk.Frame(main_gui)
-    buttonframe.grid(row=0, column=0, rowspan=5)
+
     tbarframe1 = tk.Frame(main_gui)
     tbarframe1.grid(row=0, column=1)
     plotframe1 = tk.Frame(main_gui)
@@ -146,9 +145,6 @@ def make_gui():
     tbarframe2.grid(row=2, column=1)
     plotframe2 = tk.Frame(main_gui)
     plotframe2.grid(row=3, column=1)
-
-    maxrow = 40
-    midrow = 20
 
     # Figures, canvas and axes and toolbar
     fig1 = plt.Figure(figsize=(9, 4))
@@ -176,47 +172,50 @@ def make_gui():
     toolbar2.update()
 
     # Buttons
+    buttonframe = tk.Frame(main_gui)
+    buttonframe.grid(row=0, column=0, rowspan=4)
+
     irow = 0
     h1 = tk.Label(buttonframe, text='MENU OPTIONS')
-    h1.grid(row=irow, column=0, sticky=tk.N+ tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    h1.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     b1 = tk.Button(buttonframe, text="Load File", command=b1_open_file)
-    b1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b1.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     b2 = tk.Button(buttonframe, text="Download Data", command=b2_call_getdatagui)
-    b2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b2.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     b5 = tk.Button(buttonframe, text="Plot Time", command=b5_plottime, state="disabled")
-    b5.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b5.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     b6 = tk.Button(buttonframe, text="Plot Map", command=b6_plotmap, state="disabled")
-    b6.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b6.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     b7 = tk.Button(buttonframe, text="Clear Plots", command=b7_clear, state="disabled")
-    b7.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b7.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     b8 = tk.Button(buttonframe, text="Subset Data", command=b8_call_subset, state="disabled")
-    b8.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b8.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 3
     b4 = tk.Button(buttonframe, text="Save Summary", command=b4_save_summary, state="disabled")
-    b4.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    b4.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     l1 = tk.Label(buttonframe, text="Selected Variable")  # , command=c1_varselect)
-    l1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    l1.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     c1 = ttk.Combobox(buttonframe, textvariable=tk_sel_var, values=disp_vars, justify='center')
     c1.bind('<<ComboboxSelected>>', c1_entry_changed)
     c1.current(0)
-    c1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    c1.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 3
     l2 = tk.Label(buttonframe, text="Summary Info")
-    l2.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=3)
+    l2.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=3)
     irow += 1
     m1 = tk.Message(buttonframe, relief='sunken', textvariable=tk_summary, justify='left', width=200)
-    m1.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, padx=10, ipadx=0)
+    m1.grid(row=irow, column=0, sticky=tk.E + tk.W, padx=10, ipadx=0)
     irow += 1
     b9 = tk.Button(buttonframe, text="Quit", command=b9_close_root)
-    b9.grid(row=irow, column=0, sticky=tk.S + tk.E + tk.W, ipadx=5, padx=30, pady=30)
+    b9.grid(row=irow, column=0, sticky=tk.E + tk.W, ipadx=5, padx=30, pady=30)
 
     main_gui.mainloop()
 
