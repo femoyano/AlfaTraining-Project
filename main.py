@@ -1,8 +1,6 @@
 """
 Main file
 
-Use: tkinter, matplotlib backend, ...
-
 Note:
 Packing order is important. Widgets are processed sequentially and if there
 is no space left, because the window is too small, they are not displayed.
@@ -20,12 +18,13 @@ from tkinter import filedialog, messagebox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import netCDF4 as nC
-from get_data import getdata_gui
-from stats import getstats
 import cartopy as ct
 import cartopy.crs as ccrs
 import numpy as np
 import itertools as it
+import cdsapi
+import zipfile
+import os
 
 
 nc_ds = []
@@ -251,6 +250,222 @@ def get_dsdata(ds):
 
     # print(f"Variables in this file are: {str(nc_vars).strip('[]')}")
     # print(f"Dimensions in this file are: {str(nc_dims).strip('[]')}")
+
+
+def getdata_gui():
+    # Define vars for data download
+    climvars = [
+        "near_surface_air_temperature",
+        "daily_maximum_near_surface_air_temperature",
+        "daily_minimum_near_surface_air_temperature",
+        "precipitation"
+    ]
+    timestep = ["monthly", "daily"]
+
+    def get_save_dir():
+        d = filedialog.askdirectory()
+        tk_save_dir.set(d)
+
+    def call_getdata():
+        info = getdata(var=str(tk_get_var.get()),
+                       time_step=str(tk_get_step.get()),
+                       start_date=str(tk_get_sdate.get()),
+                       end_date=str(tk_get_edate.get()),
+                       north=float(tk_north.get()), south=float(tk_south.get()),
+                       east=float(tk_east.get()), west=float(tk_west.get()),
+                       save_dir=str(tk_save_dir.get())
+                       )
+        messagebox.showinfo("Data Download", info)
+        top_getdata.quit()
+        top_getdata.destroy()
+
+    def close_getdatawin():
+        top_getdata.quit()
+        top_getdata.destroy()
+
+    top_getdata = tk.Toplevel()
+    top_getdata.grid()
+
+    # Create tk variables for data download
+    tk_save_dir = tk.StringVar()
+    tk_get_var = tk.StringVar()
+    tk_get_step = tk.StringVar()
+    tk_get_sdate = tk.StringVar()
+    tk_get_edate = tk.StringVar()
+    tk_north = tk.DoubleVar()
+    tk_east = tk.DoubleVar()
+    tk_south = tk.DoubleVar()
+    tk_west = tk.DoubleVar()
+    # Set defaults (default coordinates given for Germany)
+    tk_save_dir.set(".")
+    tk_get_var.set("near_surface_air_temperature")
+    tk_get_step.set("monthly")
+    tk_get_sdate.set("2020-01-01")
+    tk_get_edate.set("2030-12-31")
+    tk_north.set(55.0)
+    tk_east.set(15.0)
+    tk_south.set(46.0)
+    tk_west.set(6.0)
+
+    irow = 0
+    lab1 = tk.Label(top_getdata, text="Variable", justify='left')
+    lab1.grid(row=irow, column=0, columnspan=3,  sticky=tk.W, padx=10, pady=5)
+    irow += 1
+
+    for val, climvar in enumerate(climvars):  # enumerate generates tuples
+        tk.Radiobutton(top_getdata,
+                       text=climvar,
+                       variable=tk_get_var,
+                       indicatoron=1,
+                       # command=,
+                       value=climvar).grid(row=irow, column=0, columnspan=3,  sticky=tk.W, padx=20)
+        irow += 1
+
+    lab2 = tk.Label(top_getdata, text="Time Step", justify='left')
+    lab2.grid(row=irow, column=0,  columnspan=3,  sticky=tk.W, padx=10, pady=5)
+    irow += 1
+
+    for val, step in enumerate(timestep):  # enumerate generates tuples
+        tk.Radiobutton(top_getdata,
+                       text=step,
+                       variable=tk_get_step,
+                       indicatoron=1,
+                       # command=,
+                       value=step).grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=20)  # returns str
+        irow += 1
+
+    mt1 = 'Choose a time range between 2020-01-01 and 2300-12-31'
+    hlab1 = tk.Label(top_getdata, text=mt1)
+    hlab1.grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=10, pady=10)
+    irow += 1
+
+    lab3 = tk.Label(top_getdata, text="Start date (yyyy-mm-dd)")
+    lab3.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_sdate = tk.Entry(top_getdata, textvariable=tk_get_sdate)
+    ent_sdate.grid(row=irow, column=2, columnspan=1,  sticky=tk.W, padx=10)
+    irow += 1
+
+    lab4 = tk.Label(top_getdata, text="End date (yyyy-mm-dd)")
+    lab4.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_edate = tk.Entry(top_getdata, textvariable=tk_get_edate)
+    ent_edate.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
+
+    mt2 = 'Choose the region boundaries'
+    hlab2 = tk.Label(top_getdata, text=mt2)
+    hlab2.grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=10, pady=10)
+    irow += 1
+
+    lab5 = tk.Label(top_getdata, text="North bound (-90.0 to 90.0)")
+    lab5.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_n = tk.Entry(top_getdata, textvariable=tk_north)
+    ent_n.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
+
+    lab6 = tk.Label(top_getdata, text="South bound (-90.0 to 90.0)")
+    lab6.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_s = tk.Entry(top_getdata, textvariable=tk_south)
+    ent_s.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
+
+    lab7 = tk.Label(top_getdata, text="East bound (-180.0 to 180.0)")
+    lab7.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_e = tk.Entry(top_getdata, textvariable=tk_east)
+    ent_e.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
+
+    lab8 = tk.Label(top_getdata, text="West bound (-180.0 to 180.0)")
+    lab8.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_w = tk.Entry(top_getdata, textvariable=tk_west)
+    ent_w.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
+
+    dir_button = tk.Button(top_getdata, text="Choose Folder", command=get_save_dir, padx=5)
+    dir_button.grid(row=irow, column=0, sticky=tk.W, padx=10, pady=5)
+
+    dd_button = tk.Button(top_getdata, text="Download Data", command=call_getdata, padx=5)
+    dd_button.grid(row=irow, column=1, sticky=tk.W, padx=10, pady=5)
+
+    close_button = tk.Button(top_getdata, text="Cancel", command=close_getdatawin, padx=5)
+    close_button.grid(row=irow, column=2, sticky=tk.E, padx=10, pady=5)
+
+    top_getdata.mainloop()
+
+
+def getdata(var,
+            time_step,
+            start_date,
+            end_date,
+            north, south, east, west,
+            experiment='ssp2_4_5',
+            model='mpi_esm1_2_lr',
+            save_dir="./"
+            ):
+    """
+    Download climate data using the API from cds.climate.cpernicus.eu
+    For this data request to work, one must first create a user account
+    and follow the instructions for setting up the API (install cdsapi package and create file $HOME/.cdsapirc)
+    """
+
+    dates = start_date+'/'+end_date
+    dn = save_dir+'/'+var+'_'+time_step+'_'+start_date+'_'+end_date+'_'+experiment
+    zipfn = dn+'.zip'
+
+    # Send the request
+    c = cdsapi.Client()
+
+    c.retrieve(
+        'projections-cmip6',
+        {
+            'temporal_resolution': time_step,
+            'experiment': experiment,
+            'level': 'single_levels',
+            'variable': var,
+            'model': model,
+            'date': dates,
+            'area': [north, west, south, east, ],
+            'format': 'zip',
+        },
+        zipfn)
+
+    # Unzip, cd into folder and open the .nc file
+    with zipfile.ZipFile(zipfn, "r") as zip_ref:
+        zip_ref.extractall(dn)
+    os.remove(zipfn)
+
+    info = f"Data has been downloaded into directory: {dn}"
+
+    return info
+
+
+def getstats(ds_v, act_v, dis_v):
+    # Get some ifno and stats
+    var = ds_v[act_v]
+    var_m = round(var.mean(), 8)
+    var_sd = round(var_m / len(var) ** 0.5, 8)
+    # var_m = var.mean()
+    # var_sd = var_m / len(var) ** 0.5
+    var_sm = var.mean(axis=(1, 2))  # get the spatial mean (keeps the time dimension)
+    var_tm = var.mean(axis=0)  # get of mean over time (keeps lat/lon)
+    var_sm_sd = var_sm / len(var_sm) ** 0.5
+    var_tm_sd = var_tm / len(var_tm) ** 0.5
+    var_units = ds_v[act_v + '_units']
+    north = np.around(ds_v['max_lat'], 2)
+    south = np.around(ds_v['min_lat'], 2)
+    east = np.around(ds_v['max_lon'], 2)
+    west = np.around(ds_v['min_lon'], 2)
+    lat_units = ds_v['lat_units']
+    lon_units = ds_v['lon_units']
+
+    s = ['\n'+'Variable: ' + str(dis_v) + '\n' +
+         'Units: ' + str(var_units) + '\n' +
+         'Overall Mean: ' + str(var_m) + '\n' +
+         'Standard Deviation: ' + str(var_sd) + '\n' +
+         'Region coordinates: ' + '\n' +
+         str(south) + ' to ' + str(north) + ' ' + str(lat_units) + '\n' +
+         str(west) + ' to ' + str(east) + ' ' + str(lon_units) + '\n']
+
+    return s[0]
 
 
 if __name__ == '__main__':
