@@ -12,7 +12,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox
 from tkinter import font
-# from matplotlib.figure import Figure
 # import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -75,6 +74,7 @@ def make_gui():
             b5.config(state="disabled")
             b6.config(state="disabled")
             b4.config(state="disabled")
+            b8.config(state="disabled")
         else:
             active = loaded_vars[sel_v]  # find corresponding nc var and set as active
             ss, sumdict = getstats(ds_vars, active[0], sel_v)
@@ -82,6 +82,7 @@ def make_gui():
             b5.config(state="normal")
             b6.config(state="normal")
             b4.config(state="normal")
+            b8.config(state="disabled")
 
     def b5_plottime():
         b7.config(state="normal")
@@ -90,7 +91,7 @@ def make_gui():
         y = y.mean(axis=(1, 2))  # averages across lat and lon (i.e. entire region)
         xlab = ds_vars['time_units']
         ylab = ds_vars[active[0] + '_units']
-        ax1.title.set_text(str(tk_sel_var.get()) + ' (averaged over space for selected time)')
+        ax1.title.set_text(str(tk_sel_var.get()) + ' (averaged over region for selected time)')
         ax1.set_xlabel(xlab)
         ax1.set_ylabel(ylab)
         ax1.plot(x, y, color=active[1])
@@ -268,14 +269,14 @@ def getdata_gui():
                        time_step=str(tk_get_step.get()),
                        start_date=str(tk_get_sdate.get()),
                        end_date=str(tk_get_edate.get()),
-                       north=float(tk_north.get()), south=float(tk_south.get()),
-                       east=float(tk_east.get()), west=float(tk_west.get()),
+                       north=float(tk_north.get()), west=float(tk_west.get()),
+                       south=float(tk_south.get()), east=float(tk_east.get()),
                        scenario=str(tk_get_scen.get()),
                        save_dir=str(tk_save_dir.get())
                        )
         messagebox.showinfo("Data Download", info)
-        top_getdata.quit()
-        top_getdata.destroy()
+        # top_getdata.quit()  # Leave open to let user download more data
+        # top_getdata.destroy()
 
     def close_getdatawin():
         top_getdata.quit()
@@ -292,20 +293,20 @@ def getdata_gui():
     tk_get_sdate = tk.StringVar()
     tk_get_edate = tk.StringVar()
     tk_north = tk.DoubleVar()
-    tk_east = tk.DoubleVar()
-    tk_south = tk.DoubleVar()
     tk_west = tk.DoubleVar()
+    tk_south = tk.DoubleVar()
+    tk_east = tk.DoubleVar()
     # Set defaults (default coordinates given for Germany)
     tk_save_dir.set(".")
     tk_get_var.set("near_surface_air_temperature")
     tk_get_step.set("monthly")
     tk_get_scen.set("ssp2_4_5")
     tk_get_sdate.set("2020-01-01")
-    tk_get_edate.set("2030-12-31")
-    tk_north.set(55.0)
-    tk_east.set(15.0)
-    tk_south.set(46.0)
-    tk_west.set(6.0)
+    tk_get_edate.set("2020-12-31")
+    tk_north.set(90.0)
+    tk_west.set(-180.0)
+    tk_south.set(-90.0)
+    tk_east.set(180.0)
 
     irow = 0
     lab1 = tk.Label(top_getdata, text="Variable", justify='left')
@@ -369,28 +370,28 @@ def getdata_gui():
     hlab2.grid(row=irow, column=0, columnspan=3, sticky=tk.W, padx=10, pady=10)
     irow += 1
 
-    lab5 = tk.Label(top_getdata, text="North bound (-90.0 to 90.0)")
-    lab5.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
-    ent_n = tk.Entry(top_getdata, textvariable=tk_north)
-    ent_n.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
-    irow += 1
-
-    lab6 = tk.Label(top_getdata, text="South bound (-90.0 to 90.0)")
+    lab6 = tk.Label(top_getdata, text="South bound (-90.0 to 89.0)")
     lab6.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_s = tk.Entry(top_getdata, textvariable=tk_south)
     ent_s.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 
-    lab7 = tk.Label(top_getdata, text="East bound (-180.0 to 180.0)")
-    lab7.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
-    ent_e = tk.Entry(top_getdata, textvariable=tk_east)
-    ent_e.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    lab5 = tk.Label(top_getdata, text="North bound (-89.0 to 90.0)")
+    lab5.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_n = tk.Entry(top_getdata, textvariable=tk_north)
+    ent_n.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 
-    lab8 = tk.Label(top_getdata, text="West bound (-180.0 to 180.0)")
+    lab8 = tk.Label(top_getdata, text="West bound (-180.0 to 179.0)")
     lab8.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
     ent_w = tk.Entry(top_getdata, textvariable=tk_west)
     ent_w.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
+    irow += 1
+
+    lab7 = tk.Label(top_getdata, text="East bound (-179.0 to 180.0)")
+    lab7.grid(row=irow, column=0, columnspan=2, sticky=tk.W, padx=20)
+    ent_e = tk.Entry(top_getdata, textvariable=tk_east)
+    ent_e.grid(row=irow, column=2, columnspan=1, sticky=tk.W, padx=10)
     irow += 1
 
     dir_button = tk.Button(top_getdata, text="Choose Folder", command=get_save_dir, padx=5)
@@ -399,7 +400,7 @@ def getdata_gui():
     dd_button = tk.Button(top_getdata, text="Download Data", command=call_getdata, padx=5)
     dd_button.grid(row=irow, column=1, sticky=tk.W, padx=10, pady=5)
 
-    close_button = tk.Button(top_getdata, text="Cancel", command=close_getdatawin, padx=5)
+    close_button = tk.Button(top_getdata, text="Close", command=close_getdatawin, padx=5)
     close_button.grid(row=irow, column=2, sticky=tk.E, padx=10, pady=5)
 
     top_getdata.mainloop()
@@ -409,7 +410,7 @@ def getdata(var,
             time_step,
             start_date,
             end_date,
-            north, south, east, west,
+            north, west, south, east,
             scenario,
             model='mpi_esm1_2_lr',
             save_dir="./"
@@ -421,8 +422,8 @@ def getdata(var,
     """
 
     dates = start_date + '/' + end_date
-    coord = south + '_' + north + '_' + east + '_' + west
-    dn = save_dir + '/' + var + '_' + time_step + '_' + start_date + '_' + end_date + '_' + scenario + coord
+    coord = str(north) + '_' + str(south) + '_' + str(west) + '_' + str(east)
+    dn = save_dir + '/' + var + '_' + time_step + '_' + start_date + '_' + end_date + '_' + scenario + '_' + coord
     zipfn = dn + '.zip'
 
     # Send the request
