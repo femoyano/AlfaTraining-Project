@@ -7,11 +7,7 @@ output:
 
 # Climate Projections Viewer
 
-## Final Project for the Alfatraining Python Course
-
 ### Author: Dr. Fernando Moyano
-
-### Instructor: Dr. Christoph Feiler
 
 ---
 
